@@ -1,19 +1,26 @@
 class StateCounter:
-  def __init__(self):
+  def __init__(self, prefix):
+    self.prefix = prefix
     self.val = 0
+
+  def tag(self):
+    return '%s%s' % (self.prefix, self.val)
 
 class State:
   def __init__(self, state_counter, transitions):
-    self.id = state_counter.val
+    self.id = state_counter.tag()
     state_counter.val += 1
     self.transitions = transitions
 
-  def add_transition(self, key, value):
+  def add_transitions(self, key, value):
     if self.transitions.has_key(key):
-      self.transitions[key].append(value)
+      if type(value) == list:
+        self.transitions[key] += value
+      else:
+        self.transitions[key].append(value)
       self.transitions[key] = list(set(self.transitions[key]))
     else:
-      self.transitions[key] = [value]
+      self.transitions[key] = value if type(value) == list else [value]
 
   def pretty_tuple(self, key):
       return ([state.id for state in self.transitions[key]], key)
