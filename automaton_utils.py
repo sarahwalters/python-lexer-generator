@@ -39,6 +39,15 @@ class State:
         if state.id not in states_seen:
           state.pretty_print(states_seen=new_states_seen)
 
+class NFAState(State):
+  def __init__(self, state_counter, transitions):
+    State.__init__(self, state_counter, transitions)
+
+class DFAState(State):
+  def __init__(self, state_counter, transitions, nfa_states):
+    State.__init__(self, state_counter, transitions)
+    self.nfa_states = nfa_states
+    self.marked = False
 
 class Automaton:
   # https://swtch.com/~rsc/regexp/regexp1.html

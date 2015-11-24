@@ -1,5 +1,5 @@
 from postfix_utils import regex_to_postfix
-from automaton_utils import StateCounter, State, Automaton
+from automaton_utils import StateCounter, NFAState, Automaton
 
 def generate_nfa(regex):
   #try:
@@ -13,7 +13,7 @@ def generate_nfa(regex):
     if c == '*':
       nfa = stack.pop()
       # push new nfa which accepts zero or more of nfa
-      accepting = State(sc, {})
+      accepting = NFAState(sc, {})
       nfa.start_state.add_transitions('epsilon', accepting)
       nfa.end_state.add_transitions('epsilon', nfa.start_state)
       new_nfa = Automaton(nfa.start_state, accepting)
@@ -22,7 +22,7 @@ def generate_nfa(regex):
     elif c == '+': # one or more
       nfa = stack.pop()
       # push new nfa which accepts one or more of nfa
-      accepting = State(sc, {})
+      accepting = NFAState(sc, {})
       nfa.end_state.add_transitions('epsilon', nfa.start_state)
       nfa.end_state.add_transitions('epsilon', accepting)
       new_nfa = Automaton(nfa.start_state, accepting)
@@ -31,7 +31,7 @@ def generate_nfa(regex):
     elif c == '?': # zero or one
       nfa = stack.pop()
       # push new nfa which accepts zero or one of nfa
-      accepting = State(sc, {})
+      accepting = NFAState(sc, {})
       nfa.start_state.add_transitions('epsilon', accepting)
       nfa.end_state.add_transitions('epsilon', accepting)
       new_nfa = Automaton(nfa.start_state, accepting)
@@ -41,8 +41,8 @@ def generate_nfa(regex):
       nfa2 = stack.pop()
       nfa1 = stack.pop()
       # push new nfa which accepts alternation of nfa1 or nfa2
-      accepting = State(sc, {})
-      state = State(sc, {'epsilon':[nfa1.start_state, nfa2.start_state]})
+      accepting = NFAState(sc, {})
+      state = NFAState(sc, {'epsilon':[nfa1.start_state, nfa2.start_state]})
       nfa1.end_state.add_transitions('epsilon', accepting)
       nfa2.end_state.add_transitions('epsilon', accepting)
       new_nfa = Automaton(state, accepting)
@@ -58,8 +58,8 @@ def generate_nfa(regex):
 
     else:
       # push nfa which accepts character c
-      accepting = State(sc, {})
-      state = State(sc, {c:[accepting]})
+      accepting = NFAState(sc, {})
+      state = NFAState(sc, {c:[accepting]})
       new_nfa = Automaton(state, accepting)
       stack.append(new_nfa)
 
