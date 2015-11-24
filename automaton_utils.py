@@ -46,6 +46,7 @@ class NFAState(State):
 class DFAState(State):
   def __init__(self, state_counter, transitions, nfa_states):
     State.__init__(self, state_counter, transitions)
+    self.nfa_state_str = ','.join(sorted([state.id for state in nfa_states]))
     self.nfa_states = nfa_states
     self.marked = False
 

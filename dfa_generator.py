@@ -12,17 +12,20 @@ def run(regex):
   generate_dfa(sc, [nfa.start_state])
 
 def generate_dfa(sc, start_nfa_states):
-  start_state = DFAState(sc, {}, start_nfa_states)
+  eclosure = copy.copy(epsilon_closure(start_nfa_states))
+  start_state = DFAState(sc, {}, eclosure)
 
-  dfa_states = [start_state]
-  unmarked_state = dfa_states[0]
+  unmarked_queue = [start_state]
+  nfa_to_dfa = {start_state.nfa_state_str: start_state}
 
-  while unmarked_state:
-    eclosure = epsilon_closure(unmarked_state.nfa_states)
-    unmarked_state.marked = True
+  while len(unmarked_queue):
+    # mark the state
+    unmarked = unmarked_queue.pop(0)
+    unmarked.marked = True
 
+    # compute transitions
     transitions = {}
-    for nfa_state in eclosure:
+    for nfa_state in unmarked.nfa_states:
       for key in nfa_state.transitions:
         if transitions.has_key(key):
           transitions[key] += nfa_state.transitions[key]
@@ -30,42 +33,43 @@ def generate_dfa(sc, start_nfa_states):
           transitions[key] = nfa_state.transitions[key]
 
     for key in transitions:
-        nfa_states_group = transitions[key]
-        find_dfa_state = [dfa_state for dfa_state in dfa_states if dfa_state.nfa_states == nfa_states_group]
-
-        if len(find_dfa_state) == 1:
-          existing_dfa_state = find_dfa_state[0]
-          unmarked_state.add_transitions(key, existing_dfa_state)
-        elif len(find_dfa_state) == 0:
-          new_dfa_state = DFAState(sc, {}, nfa_states_group)
-          dfa_states.append(new_dfa_state)
-          unmarked_state.add_transitions(key, new_dfa_state)
-        else:
-          raise RuntimeError("Duplicate DFA states")
-
-    unmarked_state = None
-    for state in dfa_states:
-      if not state.marked:
-        unmarked_state = state
-        break
+      eclosure = epsilon_closure(transitions[key])
+      nfa_state_str = ','.join(sorted([state.id for state in eclosure]))
+      if nfa_to_dfa.has_key(nfa_state_str):
+        existing_state = nfa_to_dfa[nfa_state_str]
+        unmarked.add_transitions(key, existing_state)
+      else:
+        new_state = DFAState(sc, {}, eclosure)
+        nfa_to_dfa[new_state.nfa_state_str] = new_state
+        unmarked.add_transitions(key, new_state)
+        unmarked_queue.append(new_state)
 
   start_state.pretty_print()
 
+seen_state_ids = []
+
 def epsilon_closure(states):
-  eclosure_sets = [epsilon_closure_single_state(state) for state in states]
-  res_eclosure = []
-  for eclosure_set in eclosure_sets:
-    res_eclosure += eclosure_set
-  return list(set(res_eclosure))
+  print '------------------'
+  print [state.id for state in states]
+  queue = copy.copy(states)
+  considered_states = []
+  eclosure = []
 
-def epsilon_closure_single_state(state):
-  if not state.transitions.has_key('epsilon'):
-    return []
-  else:
-    first_deg_eclosure = state.transitions['epsilon']
-    higher_deg_eclosures = [epsilon_closure_single_state(_state) for _state in first_deg_eclosure]
-    res_eclosure = copy.copy(first_deg_eclosure + [state])
-    for eclosure_set in higher_deg_eclosures:
-      res_eclosure += eclosure_set
+  while len(queue):
 
-  return list(set(res_eclosure))
+    state = queue.pop(0)
+    considered_states.append(state)
+    if state.transitions.has_key('epsilon'):
+      for s in state.transitions['epsilon']:
+        if not find_by_id(eclosure, s):
+          eclosure.append(s)
+        if not find_by_id(considered_states, s) and not find_by_id(queue, s):
+          queue.append(s)
+
+  print [state.id for state in eclosure]
+
+  return eclosure
+
+def find_by_id(states, state):
+  match = [s for s in states if s.id == state.id]
+  return len(match) >= 1
