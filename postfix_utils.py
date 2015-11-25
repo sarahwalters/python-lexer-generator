@@ -3,6 +3,7 @@ def regex_to_postfix(regex):
   postfix = infix_to_postfix(infix)
   return postfix
 
+
 def concat_expand(regex):
   # https://github.com/burner/dex/blob/master/concatexpand.cpp
   # Mark concatenation locations with chr(8) (backspace char)
@@ -18,6 +19,7 @@ def concat_expand(regex):
 
   res += regex[-1]
   return res
+
 
 def infix_to_postfix(regex):
   # https://gist.github.com/DmitrySoshnikov/1239804

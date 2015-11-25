@@ -6,6 +6,7 @@ class StateCounter:
   def tag(self):
     return '%s%s' % (self.prefix, self.val)
 
+
 class State:
   def __init__(self, state_counter, transitions):
     self.id = state_counter.tag()
@@ -26,29 +27,39 @@ class State:
       return ([state.id for state in self.transitions[key]], key)
 
   # still prints some states multiple times
-  def pretty_print(self, states_seen=[]):
+  def pretty_print(self):
+    global states_seen
+    states_seen.append(self.id)
+
     pretty_transitions = ['%s on %s' % self.pretty_tuple(key) for key in self.transitions]
-    print '%s: ' % self.id + ', '.join(pretty_transitions)
+    to_print = '%s: ' % self.id + ', '.join(pretty_transitions)
+
+    if hasattr(self, 'accepting') and self.accepting:
+      to_print = '(ACC) ' + to_print
+
+    print to_print
 
     # recurse:
     for key in self.transitions:
-      states_seen_update = [state.id for state in self.transitions[key]]
-      new_states_seen = list(set(states_seen + states_seen_update))
-
       for state in self.transitions[key]:
         if state.id not in states_seen:
-          state.pretty_print(states_seen=new_states_seen)
+          state.pretty_print()
+
 
 class NFAState(State):
   def __init__(self, state_counter, transitions):
     State.__init__(self, state_counter, transitions)
 
+
 class DFAState(State):
-  def __init__(self, state_counter, transitions, nfa_states):
+  def __init__(self, state_counter, transitions, nfa_states, accepting_id):
     State.__init__(self, state_counter, transitions)
-    self.nfa_state_str = ','.join(sorted([state.id for state in nfa_states]))
+    nfa_state_ids = [state.id for state in nfa_states]
+    self.nfa_state_str = ','.join(sorted(nfa_state_ids))
     self.nfa_states = nfa_states
     self.marked = False
+    self.accepting = accepting_id in nfa_state_ids
+
 
 class Automaton:
   # https://swtch.com/~rsc/regexp/regexp1.html
@@ -57,4 +68,6 @@ class Automaton:
     self.end_state = end_state
 
   def pretty_print(self):
+    global states_seen
+    states_seen = []
     self.start_state.pretty_print()

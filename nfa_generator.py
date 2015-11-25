@@ -1,6 +1,7 @@
 from postfix_utils import regex_to_postfix
 from automaton_utils import StateCounter, NFAState, Automaton
 
+
 def generate_nfa(regex):
   #try:
   sc = StateCounter('nfa')
@@ -62,9 +63,6 @@ def generate_nfa(regex):
       state = NFAState(sc, {c:[accepting]})
       new_nfa = Automaton(state, accepting)
       stack.append(new_nfa)
-
-  # except:
-  #   raise RuntimeError("%s is not a supported regular expression" % regex)
 
   if len(stack) != 1:
     raise RuntimeError("%s is not a supported regular expression" % regex)
