@@ -2,7 +2,7 @@ from postfix_utils import regex_to_postfix
 from automaton_utils import StateCounter, NFAState, Automaton
 
 
-def generate_nfa(regex):
+def generate_nfa(regex, sc):
   #try:
   sc = StateCounter('nfa')
   postfix = regex_to_postfix(regex)
